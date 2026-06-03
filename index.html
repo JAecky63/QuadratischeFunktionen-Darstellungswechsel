@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quadratische Funktionen Trainer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: linear-gradient(to bottom right, #dbeafe, #eff6ff);
+    }
+
+    .topbar {
+      text-align: center;
+      margin-bottom: 15px;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .container.full-width-mode {
+      display: block;
+    }
+
+    .container.full-width-mode .left {
+      display: none;
+    }
+
+    .container.full-width-mode .right {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .left, .right {
+      flex: 1;
+      min-width: 300px;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    canvas {
+      border: 2px solid #3b82f6;
+      max-width: 100%;
+      touch-action: none;
+      background: #ffffff;
+    }
+
+    input {
+      margin: 5px;
+      padding: 10px;
+      width: 90px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .number-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin: 6px;
+      background: #eef5ff;
+      padding: 6px;
+      border-radius: 10px;
+    }
+
+    .number-control button {
+      min-width: 38px;
+      padding: 8px 10px;
+      font-weight: bold;
+    }
+
+    .number-control input {
+      width: 70px;
+      margin: 0;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      transition: background 0.2s ease;
+      padding: 10px 14px;
+      margin: 5px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    table {
+      margin: 10px auto;
+      border-collapse: collapse;
+      font-size: 18px;
+    }
+
+    td, th {
+      border: 1px solid black;
+      padding: 8px 16px;
+    }
+
+    .scorebox {
+      line-height: 1.6;
+      font-size: 20px;
+      font-weight: bold;
+      background: #eef5ff;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    #feedback {
+      font-size: 18px;
+      font-weight: bold;
+      min-height: 28px;
+    }
+
+    #endMessage {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      width: min(90%, 720px);
+      background: #1d4ed8;
+      color: white;
+      padding: 18px 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(30, 64, 175, 0.35);
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Quadratische Funktionen Trainer</h1>
+
+    <button onclick="setMode('graphToEquation')">Graph → Scheitelpunktform</button>
+    <button onclick="setMode('tableToEquation')">Tabelle → Scheitelpunktform</button>
+    <button onclick="setMode('equationToGraph')">Scheitelpunktform → Graph</button>
+    <button onclick="setMode('equationToTable')">Scheitelpunktform → Tabelle</button>
+    <button onclick="endGame()">Spiel beenden</button>
+    <button onclick="startGame()">Neues Spiel starten</button>
+  </div>
+
+  <div class="container">
+    <div class="left">
+      <canvas id="graph" width="360" height="360"></canvas>
+      <div id="tableContainer"></div>
+    </div>
+
+    <div class="right">
+      <div class="scorebox">
+        Punkte: <span id="score">0</span><br>
+        Bearbeitete Aufgaben: <span id="tasksSolved">0</span><br>
+        Level: <span id="levelDisplay">0</span> <span id="levelIcon">🌱</span><br>
+        Fortschritt zum nächsten Level: <span id="levelProgress">0</span>/3
+      </div>
+
+      <h2 id="task"></h2>
+      <p id="instruction"></p>
+
+      <div id="equationInputArea">
+        <p>Gib zuerst die Werte aus der Scheitelpunktform ein:</p>
+        <p><strong>y = a · (x − d)² + e</strong></p>
+
+        <label>a:</label>
+        <div class="number-control">
+          <button type="button" onclick="changeInputValue('aInput', -0.5)">−</button>
+          <input id="aInput" type="text" inputmode="decimal" placeholder="a" oninput="updateStudentEquationPreview()">
+          <button type="button" onclick="changeInputValue('aInput', 0.5)">+</button>
+        </div>
+
+        <label>d:</label>
+        <div class="number-control">
+          <button type="button" onclick="changeInputValue('dInput', -1)">−</button>
+          <input id="dInput" type="text" inputmode="decimal" placeholder="d" oninput="updateStudentEquationPreview()">
+          <button type="button" onclick="changeInputValue('dInput', 1)">+</button>
+        </div>
+
+        <label>e:</label>
+        <div class="number-control">
+          <button type="button" onclick="changeInputValue('eInput', -1)">−</button>
+          <input id="eInput" type="text" inputmode="decimal" placeholder="e" oninput="updateStudentEquationPreview()">
+          <button type="button" onclick="changeInputValue('eInput', 1)">+</button>
+        </div>
+
+        <div style="margin-top:14px; background:#eff6ff; padding:12px; border-radius:12px;">
+          <p><strong>Zusatz: Trage die vollständige Scheitelpunktform mit Vorzeichen ein:</strong></p>
+          <p>
+            y =
+            <input id="spfAInput" type="text" inputmode="decimal" placeholder="a" oninput="updateStudentEquationPreview()" style="width:60px;">
+            · (x
+            <select id="insideSign" onchange="updateStudentEquationPreview()">
+              <option value="-">−</option>
+              <option value="+">+</option>
+            </select>
+            <input id="spfDAbsInput" type="text" inputmode="decimal" placeholder="Zahl" oninput="updateStudentEquationPreview()" style="width:60px;">
+            )²
+            <select id="outsideSign" onchange="updateStudentEquationPreview()">
+              <option value="+">+</option>
+              <option value="-">−</option>
+            </select>
+            <input id="spfEAbsInput" type="text" inputmode="decimal" placeholder="Zahl" oninput="updateStudentEquationPreview()" style="width:60px;">
+          </p>
+          <p style="color:#1e3a8a; font-weight:bold;">
+            Deine vollständige SPF: <span id="studentEquationPreview">—</span>
+          </p>
+        </div>
+      </div>
+
+      <div id="valueTableInputArea" class="hidden"></div>
+
+      <br>
+      <button id="checkButton" onclick="checkAnswer()">Überprüfen</button>
+      <button onclick="newTask()">Neue Aufgabe</button>
+
+      <p id="feedback"></p>
+    </div>
+  </div>
+
+  <div id="endMessage" class="hidden"></div>
+
+  <footer style="text-align:center; margin-top:30px; color:#1e3a8a; font-size:14px;">
+    Erstellt von Jutta Aeckersberg, 2026 · Freie Nutzung und Weitergabe erlaubt (MIT-Lizenz)
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('graph');
+    const ctx = canvas.getContext('2d');
+    const tableContainer = document.getElementById('tableContainer');
+    const valueTableInputArea = document.getElementById('valueTableInputArea');
+    const equationInputArea = document.getElementById('equationInputArea');
+    const container = document.querySelector('.container');
+    const taskDiv = document.getElementById('task');
+    const instructionDiv = document.getElementById('instruction');
+    const scoreDisplay = document.getElementById('score');
+    const tasksSolvedDisplay = document.getElementById('tasksSolved');
+    const levelDisplay = document.getElementById('levelDisplay');
+    const levelProgressDisplay = document.getElementById('levelProgress');
+    const levelIcon = document.getElementById('levelIcon');
+    const checkButton = document.getElementById('checkButton');
+    const insideSign = document.getElementById('insideSign');
+    const outsideSign = document.getElementById('outsideSign');
+
+    const size = 360;
+    const scale = 24;
+    const origin = size / 2;
+    const snapStep = 0.5;
+
+    let mode = 'graphToEquation';
+    let a = 1;
+    let d = 0;
+    let e = 0;
+    let score = 0;
+    let tasksSolved = 0;
+    let level = 0;
+    let levelProgress = 0;
+    let gameActive = true;
+    let answerLocked = false;
+    let draggingPointIndex = null;
+    let valueTableRows = [];
+
+    let userPoints = [
+      { x: -1, y: 1 },
+      { x: 0, y: 0 },
+      { x: 1, y: 1 }
+    ];
+
+    function normalizeNumberInput(value) {
+      return parseFloat(String(value).replace(',', '.'));
+    }
+
+    function changeInputValue(inputId, step) {
+      if (!gameActive || answerLocked) return;
+
+      const input = document.getElementById(inputId);
+      let currentValue = normalizeNumberInput(input.value);
+
+      if (Number.isNaN(currentValue)) {
+        currentValue = 0;
+      }
+
+      input.value = Number((currentValue + step).toFixed(2));
+      updateStudentEquationPreview();
+    }
+
+    function formatTerm(value) {
+      return Number(value.toFixed(2));
+    }
+
+    function updateStudentEquationPreview() {
+      const spfA = normalizeNumberInput(document.getElementById('spfAInput').value);
+      const dAbs = normalizeNumberInput(document.getElementById('spfDAbsInput').value);
+      const eAbs = normalizeNumberInput(document.getElementById('spfEAbsInput').value);
+
+      const aText = Number.isNaN(spfA) ? 'a' : formatTerm(spfA);
+      const dText = Number.isNaN(dAbs) ? '…' : formatTerm(Math.abs(dAbs));
+      const eText = Number.isNaN(eAbs) ? '…' : formatTerm(Math.abs(eAbs));
+
+      document.getElementById('studentEquationPreview').textContent = `y = ${aText} · (x ${insideSign.value} ${dText})² ${outsideSign.value} ${eText}`;
+    }
+
+    function formatEquation(aValue, dValue, eValue) {
+      const aText = formatTerm(aValue);
+      const dText = dValue === 0 ? 'x' : dValue > 0 ? `(x - ${formatTerm(dValue)})` : `(x + ${formatTerm(Math.abs(dValue))})`;
+      const eText = eValue === 0 ? '' : eValue > 0 ? ` + ${formatTerm(eValue)}` : ` - ${formatTerm(Math.abs(eValue))}`;
+      return `y = ${aText} · ${dText}²${eText}`;
+    }
+
+    function randomA() {
+      let values;
+      if (level === 0) values = [1, -1];
+      else if (level === 1) values = [1, -1, 2, -2];
+      else values = [0.5, -0.5, 1, -1, 2, -2];
+      return values[Math.floor(Math.random() * values.length)];
+    }
+
+    function randomD() {
+      if (level === 0) return Math.floor(Math.random() * 5) - 2;
+      return Math.floor(Math.random() * 7) - 3;
+    }
+
+    function randomE() {
+      if (level === 0) return Math.floor(Math.random() * 5) - 2;
+      return Math.floor(Math.random() * 7) - 3;
+    }
+
+    function generateFunction() {
+      a = randomA();
+      d = randomD();
+      e = randomE();
+    }
+
+    function f(x) {
+      return a * Math.pow(x - d, 2) + e;
+    }
+
+    function updateScore() {
+      scoreDisplay.textContent = score;
+      tasksSolvedDisplay.textContent = tasksSolved;
+      levelDisplay.textContent = level;
+      levelProgressDisplay.textContent = levelProgress;
+      const icons = ['🌱', '⭐', '🚀', '👑'];
+      levelIcon.textContent = icons[level];
+    }
+
+    function registerCorrectAnswer() {
+      score += 1;
+      levelProgress += 1;
+      if (levelProgress >= 3 && level < 3) {
+        level += 1;
+        levelProgress = 0;
+        return ` Levelaufstieg! Du bist jetzt in Level ${level}.`;
+      }
+      return '';
+    }
+
+    function registerWrongAnswer() {
+      score -= 1;
+      levelProgress -= 1;
+      if (levelProgress < 0) {
+        if (level > 0) {
+          level -= 1;
+          levelProgress = 2;
+          return ` Punkt abgezogen. Levelabstieg! Du bist jetzt wieder in Level ${level}.`;
+        }
+        levelProgress = 0;
+      }
+      return ' Punkt abgezogen.';
+    }
+
+    function setMode(newMode) {
+      if (!gameActive) return;
+      mode = newMode;
+      newTask();
+    }
+
+    function mathToPixel(point) {
+      return {
+        px: origin + point.x * scale,
+        py: origin - point.y * scale
+      };
+    }
+
+    function pixelToMath(px, py, step = snapStep) {
+      return {
+        x: Math.round(((px - origin) / scale) / step) * step,
+        y: Math.round(((origin - py) / scale) / step) * step
+      };
+    }
+
+    function getCanvasPosition(event) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function drawGrid() {
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#ddd';
+
+      // Gitterlinien werden vom Ursprung aus gezeichnet.
+      // So liegen ganzzahlige Koordinaten exakt auf Gitterkreuzungen.
+      for (let i = -7; i <= 7; i++) {
+        const x = origin + i * scale;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, size);
+        ctx.stroke();
+      }
+
+      for (let i = -7; i <= 7; i++) {
+        const y = origin + i * scale;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(size, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawAxes() {
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(origin, 0);
+      ctx.lineTo(origin, size);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, origin);
+      ctx.lineTo(size, origin);
+      ctx.stroke();
+    }
+
+    function drawLabels() {
+      ctx.fillStyle = 'black';
+      ctx.font = '10px Arial';
+      for (let i = -7; i <= 7; i++) {
+        if (i === 0) continue;
+        ctx.fillText(i, origin + i * scale - 5, origin + 12);
+        ctx.fillText(i, origin + 5, origin - i * scale + 3);
+      }
+    }
+
+    function drawParabola(parabolaA, parabolaD, parabolaE, color, lineWidth) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      let started = false;
+
+      for (let x = -8; x <= 8; x += 0.05) {
+        const y = parabolaA * Math.pow(x - parabolaD, 2) + parabolaE;
+        const px = origin + x * scale;
+        const py = origin - y * scale;
+
+        if (!started) {
+          ctx.moveTo(px, py);
+          started = true;
+        } else {
+          ctx.lineTo(px, py);
+        }
+      }
+      ctx.stroke();
+    }
+
+    function drawTargetParabola() {
+      drawParabola(a, d, e, 'blue', 2);
+      drawVertex(d, e, 'blue');
+    }
+
+    function drawVertex(x, y, color) {
+      const pixel = mathToPixel({ x, y });
+      ctx.beginPath();
+      ctx.fillStyle = 'white';
+      ctx.arc(pixel.px, pixel.py, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    function getUserParabolaFromPoints() {
+      const vertex = userPoints[1];
+      const control = userPoints[2];
+      const denominator = Math.pow(control.x - vertex.x, 2);
+      if (denominator === 0) return null;
+
+      const userA = (control.y - vertex.y) / denominator;
+      return { a: userA, d: vertex.x, e: vertex.y };
+    }
+
+    function drawUserParabola() {
+      const userParabola = getUserParabolaFromPoints();
+      if (userParabola) {
+        drawParabola(userParabola.a, userParabola.d, userParabola.e, 'red', 3);
+      }
+
+      userPoints.forEach((point) => {
+        const pixel = mathToPixel(point);
+        ctx.beginPath();
+        ctx.fillStyle = 'white';
+        ctx.arc(pixel.px, pixel.py, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      });
+    }
+
+    function drawGraph() {
+      ctx.clearRect(0, 0, size, size);
+      drawGrid();
+      drawAxes();
+      drawLabels();
+
+      if (mode === 'equationToGraph') {
+        drawUserParabola();
+      } else {
+        drawTargetParabola();
+      }
+    }
+
+    function createTable() {
+      const xValues = level < 3
+        ? [d - 2, d - 1, d, d + 1, d + 2]
+        : [d - 3, d - 2, d - 1, d + 1, d + 2];
+
+      let html = '<table><tr><th>x</th><th>y</th></tr>';
+      xValues.forEach((x) => {
+        html += `<tr><td>${formatTerm(x)}</td><td>${formatTerm(f(x))}</td></tr>`;
+      });
+      html += '</table>';
+      tableContainer.innerHTML = html;
+    }
+
+    function createEquationToTableTask() {
+      const xValues = level < 3
+        ? [d - 2, d - 1, d, d + 1, d + 2]
+        : [d - 3, d - 2, d - 1, d + 1, d + 2];
+
+      valueTableRows = [];
+      let html = '<table><tr><th>x</th><th>y</th></tr>';
+
+      xValues.forEach((x, index) => {
+        const y = f(x);
+        if (index % 2 === 0) {
+          valueTableRows.push({ type: 'y', x, y, inputId: `tableInput${index}` });
+          html += `<tr><td>${formatTerm(x)}</td><td><div class="number-control"><button type="button" onclick="changeInputValue('tableInput${index}', -0.5)">−</button><input id="tableInput${index}" type="text" inputmode="decimal" placeholder="y"><button type="button" onclick="changeInputValue('tableInput${index}', 0.5)">+</button></div></td></tr>`;
+        } else {
+          valueTableRows.push({ type: 'x', x, y, inputId: `tableInput${index}` });
+          html += `<tr><td><div class="number-control"><button type="button" onclick="changeInputValue('tableInput${index}', -0.5)">−</button><input id="tableInput${index}" type="text" inputmode="decimal" placeholder="x"><button type="button" onclick="changeInputValue('tableInput${index}', 0.5)">+</button></div></td><td>${formatTerm(y)}</td></tr>`;
+        }
+      });
+
+      html += '</table>';
+      valueTableInputArea.innerHTML = html;
+    }
+
+    function resetUserParabola() {
+      userPoints = [
+        { x: d - 1, y: e + a },
+        { x: d, y: e },
+        { x: d + 1, y: e + a }
+      ];
+      userPoints[1] = { x: 0, y: 0 };
+      userPoints[2] = { x: 1, y: 1 };
+      draggingPointIndex = null;
+    }
+
+    function checkEquationInputAnswer() {
+      const userA = normalizeNumberInput(document.getElementById('aInput').value);
+      const userD = normalizeNumberInput(document.getElementById('dInput').value);
+      const userE = normalizeNumberInput(document.getElementById('eInput').value);
+
+      const spfA = normalizeNumberInput(document.getElementById('spfAInput').value);
+      const spfDAbs = normalizeNumberInput(document.getElementById('spfDAbsInput').value);
+      const spfEAbs = normalizeNumberInput(document.getElementById('spfEAbsInput').value);
+      const spfD = insideSign.value === '-' ? Math.abs(spfDAbs) : -Math.abs(spfDAbs);
+      const spfE = outsideSign.value === '+' ? Math.abs(spfEAbs) : -Math.abs(spfEAbs);
+
+      if (Number.isNaN(userA) || Number.isNaN(userD) || Number.isNaN(userE) || Number.isNaN(spfA) || Number.isNaN(spfDAbs) || Number.isNaN(spfEAbs)) {
+        document.getElementById('feedback').textContent = 'Bitte fülle sowohl a, d, e als auch die vollständige SPF aus.';
+        return false;
+      }
+
+      const tol = 0.001;
+      const simpleCorrect = Math.abs(userA - a) < tol && Math.abs(userD - d) < tol && Math.abs(userE - e) < tol;
+      const spfCorrect = Math.abs(spfA - a) < tol && Math.abs(spfD - d) < tol && Math.abs(spfE - e) < tol;
+      const correct = simpleCorrect && spfCorrect;
+      tasksSolved += 1;
+
+      if (correct) {
+        const levelMessage = registerCorrectAnswer();
+        document.getElementById('feedback').textContent = `Richtig! Du hast jetzt ${score} Punkt(e).${levelMessage}`;
+      } else {
+        const levelMessage = registerWrongAnswer();
+        document.getElementById('feedback').textContent = `Nicht ganz. Richtige Lösung: ${formatEquation(a, d, e)}.${levelMessage}`;
+      }
+      return true;
+    }
+
+    function checkGraphDrawingAnswer() {
+      const userParabola = getUserParabolaFromPoints();
+      if (!userParabola) {
+        document.getElementById('feedback').textContent = 'Der Kontrollpunkt darf nicht genau über oder unter dem Scheitelpunkt liegen.';
+        return false;
+      }
+
+      const tol = 0.001;
+      const correct = Math.abs(userParabola.a - a) < tol && Math.abs(userParabola.d - d) < tol && Math.abs(userParabola.e - e) < tol;
+      tasksSolved += 1;
+
+      if (correct) {
+        const levelMessage = registerCorrectAnswer();
+        document.getElementById('feedback').textContent = `Richtig! Deine Parabel passt zu ${formatEquation(a, d, e)}. Du hast jetzt ${score} Punkt(e).${levelMessage}`;
+      } else {
+        const levelMessage = registerWrongAnswer();
+        document.getElementById('feedback').textContent = `Nicht ganz. Deine Parabel ist etwa ${formatEquation(userParabola.a, userParabola.d, userParabola.e)}. Gesucht war ${formatEquation(a, d, e)}.${levelMessage}`;
+      }
+      return true;
+    }
+
+    function checkEquationToTableAnswer() {
+      const tol = 0.001;
+      let allCorrect = true;
+      let emptyField = false;
+
+      valueTableRows.forEach((row) => {
+        const input = document.getElementById(row.inputId);
+        const userValue = normalizeNumberInput(input.value);
+        if (Number.isNaN(userValue)) {
+          emptyField = true;
+          allCorrect = false;
+          return;
+        }
+        const correctValue = row.type === 'x' ? row.x : row.y;
+        if (Math.abs(userValue - correctValue) >= tol) {
+          allCorrect = false;
+        }
+      });
+
+      if (emptyField) {
+        document.getElementById('feedback').textContent = 'Bitte fülle alle fehlenden Tabellenwerte aus.';
+        return false;
+      }
+
+      tasksSolved += 1;
+      if (allCorrect) {
+        const levelMessage = registerCorrectAnswer();
+        document.getElementById('feedback').textContent = `Richtig! Die Tabelle passt zu ${formatEquation(a, d, e)}. Du hast jetzt ${score} Punkt(e).${levelMessage}`;
+      } else {
+        const solutions = valueTableRows.map((row) => {
+          const value = row.type === 'x' ? row.x : row.y;
+          return `${row.type} = ${formatTerm(value)}`;
+        }).join(', ');
+        const levelMessage = registerWrongAnswer();
+        document.getElementById('feedback').textContent = `Nicht ganz. Richtige fehlende Werte: ${solutions}.${levelMessage}`;
+      }
+      return true;
+    }
+
+    function checkAnswer() {
+      if (!gameActive || answerLocked) return;
+
+      let checked;
+      if (mode === 'equationToGraph') checked = checkGraphDrawingAnswer();
+      else if (mode === 'equationToTable') checked = checkEquationToTableAnswer();
+      else checked = checkEquationInputAnswer();
+
+      if (!checked) return;
+      updateScore();
+      answerLocked = true;
+      checkButton.disabled = true;
+    }
+
+    function newTask() {
+      if (!gameActive) return;
+
+      generateFunction();
+      answerLocked = false;
+      checkButton.disabled = false;
+      resetUserParabola();
+
+      document.getElementById('aInput').value = '';
+      document.getElementById('dInput').value = '';
+      document.getElementById('eInput').value = '';
+      document.getElementById('spfAInput').value = '';
+      document.getElementById('spfDAbsInput').value = '';
+      document.getElementById('spfEAbsInput').value = '';
+      insideSign.value = '-';
+      outsideSign.value = '+';
+      updateStudentEquationPreview();
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('endMessage').classList.add('hidden');
+      valueTableInputArea.innerHTML = '';
+      tableContainer.innerHTML = '';
+
+      container.classList.toggle('full-width-mode', mode === 'equationToTable');
+
+      if (mode === 'graphToEquation') {
+        canvas.style.display = 'block';
+        equationInputArea.classList.remove('hidden');
+        valueTableInputArea.classList.add('hidden');
+        taskDiv.textContent = 'Bestimme die Scheitelpunktform zum Graphen.';
+        instructionDiv.textContent = 'Lies den Scheitelpunkt S(d|e) und den Streckfaktor a aus dem Graphen ab.';
+        drawGraph();
+      } else if (mode === 'tableToEquation') {
+        canvas.style.display = 'none';
+        equationInputArea.classList.remove('hidden');
+        valueTableInputArea.classList.add('hidden');
+        taskDiv.textContent = 'Bestimme die Scheitelpunktform zur Wertetabelle.';
+        instructionDiv.textContent = 'Nutze die Symmetrie der Wertetabelle, um den Scheitelpunkt und a zu bestimmen.';
+        createTable();
+      } else if (mode === 'equationToGraph') {
+        canvas.style.display = 'block';
+        equationInputArea.classList.add('hidden');
+        valueTableInputArea.classList.add('hidden');
+        taskDiv.textContent = `Zeichne den Graphen zu: ${formatEquation(a, d, e)}`;
+        instructionDiv.textContent = 'Ziehe den mittleren roten Punkt als Scheitelpunkt. Ziehe einen äußeren Punkt, um Öffnung und Streckung festzulegen.';
+        drawGraph();
+      } else if (mode === 'equationToTable') {
+        canvas.style.display = 'none';
+        equationInputArea.classList.add('hidden');
+        valueTableInputArea.classList.remove('hidden');
+        taskDiv.textContent = `Ergänze die Wertetabelle zu: ${formatEquation(a, d, e)}`;
+        instructionDiv.textContent = 'In jeder Zeile ist abwechselnd ein x-Wert oder ein y-Wert vorgegeben. Berechne den fehlenden Wert.';
+        createEquationToTableTask();
+      }
+    }
+
+    function endGame() {
+      gameActive = false;
+      answerLocked = true;
+      checkButton.disabled = true;
+      updateScore();
+      const endMessage = document.getElementById('endMessage');
+      endMessage.textContent = `Du hast das Spiel bei Level ${level} mit der Punktzahl ${score} beendet.`;
+      endMessage.classList.remove('hidden');
+      document.getElementById('feedback').textContent = 'Spiel beendet.';
+    }
+
+    function startGame() {
+      score = 0;
+      tasksSolved = 0;
+      level = 0;
+      levelProgress = 0;
+      gameActive = true;
+      answerLocked = false;
+      checkButton.disabled = false;
+      document.getElementById('endMessage').classList.add('hidden');
+      document.getElementById('feedback').textContent = '';
+      updateScore();
+      newTask();
+    }
+
+    function startDrag(event) {
+      if (mode !== 'equationToGraph' || answerLocked || !gameActive) return;
+      event.preventDefault();
+      const pos = getCanvasPosition(event);
+      draggingPointIndex = null;
+
+      userPoints.forEach((point, index) => {
+        const pixel = mathToPixel(point);
+        const distance = Math.hypot(pos.x - pixel.px, pos.y - pixel.py);
+        if (distance < 18) draggingPointIndex = index;
+      });
+    }
+
+    function moveDrag(event) {
+      if (draggingPointIndex === null || mode !== 'equationToGraph' || answerLocked || !gameActive) return;
+      event.preventDefault();
+      const pos = getCanvasPosition(event);
+      const snap = draggingPointIndex === 1 ? 1 : snapStep;
+      const mathPoint = pixelToMath(pos.x, pos.y, snap);
+      mathPoint.x = Math.max(-7, Math.min(7, mathPoint.x));
+      mathPoint.y = Math.max(-7, Math.min(7, mathPoint.y));
+      userPoints[draggingPointIndex] = mathPoint;
+      drawGraph();
+    }
+
+    function endDrag() {
+      draggingPointIndex = null;
+    }
+
+    canvas.addEventListener('mousedown', startDrag);
+    canvas.addEventListener('mousemove', moveDrag);
+    canvas.addEventListener('mouseup', endDrag);
+    canvas.addEventListener('mouseleave', endDrag);
+    canvas.addEventListener('touchstart', startDrag);
+    canvas.addEventListener('touchmove', moveDrag);
+    canvas.addEventListener('touchend', endDrag);
+
+    updateScore();
+    newTask();
+  </script>
+</body>
+</html>
