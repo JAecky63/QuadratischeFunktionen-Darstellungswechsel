@@ -180,32 +180,31 @@
       <p id="instruction"></p>
 
       <div id="equationInputArea">
-        <p>Gib zuerst die Werte aus der Scheitelpunktform ein:</p>
-        <p><strong>y = a · (x − d)² + e</strong></p>
+        <p>Bestimme den Scheitelpunkt S(d | e) und den Streckfaktor a:</p>
 
-        <label>a:</label>
-        <div class="number-control">
-          <button type="button" onclick="changeInputValue('aInput', -0.5)">−</button>
-          <input id="aInput" type="text" inputmode="decimal" placeholder="a" oninput="updateStudentEquationPreview()">
-          <button type="button" onclick="changeInputValue('aInput', 0.5)">+</button>
-        </div>
-
-        <label>d:</label>
+        <label>d =</label>
         <div class="number-control">
           <button type="button" onclick="changeInputValue('dInput', -1)">−</button>
           <input id="dInput" type="text" inputmode="decimal" placeholder="d" oninput="updateStudentEquationPreview()">
           <button type="button" onclick="changeInputValue('dInput', 1)">+</button>
         </div>
 
-        <label>e:</label>
+        <label>e =</label>
         <div class="number-control">
           <button type="button" onclick="changeInputValue('eInput', -1)">−</button>
           <input id="eInput" type="text" inputmode="decimal" placeholder="e" oninput="updateStudentEquationPreview()">
           <button type="button" onclick="changeInputValue('eInput', 1)">+</button>
         </div>
 
+        <label>a =</label>
+        <div class="number-control">
+          <button type="button" onclick="changeInputValue('aInput', -0.5)">−</button>
+          <input id="aInput" type="text" inputmode="decimal" placeholder="a" oninput="updateStudentEquationPreview()">
+          <button type="button" onclick="changeInputValue('aInput', 0.5)">+</button>
+        </div>
+
         <div style="margin-top:14px; background:#eff6ff; padding:12px; border-radius:12px;">
-          <p><strong>Zusatz: Trage die vollständige Scheitelpunktform mit Vorzeichen ein:</strong></p>
+          <p><strong>Setze die Werte in die Scheitelpunktform ein (Vorzeichen beachten!):</strong></p>
           <p>
             y =
             <input id="spfAInput" type="text" inputmode="decimal" placeholder="a" oninput="updateStudentEquationPreview()" style="width:60px;">
@@ -223,7 +222,7 @@
             <input id="spfEAbsInput" type="text" inputmode="decimal" placeholder="Zahl" oninput="updateStudentEquationPreview()" style="width:60px;">
           </p>
           <p style="color:#1e3a8a; font-weight:bold;">
-            Deine vollständige SPF: <span id="studentEquationPreview">—</span>
+            Deine SPF: <span id="studentEquationPreview">—</span>
           </p>
         </div>
       </div>
@@ -602,7 +601,7 @@
       const spfE = outsideSign.value === '+' ? Math.abs(spfEAbs) : -Math.abs(spfEAbs);
 
       if (Number.isNaN(userA) || Number.isNaN(userD) || Number.isNaN(userE) || Number.isNaN(spfA) || Number.isNaN(spfDAbs) || Number.isNaN(spfEAbs)) {
-        document.getElementById('feedback').textContent = 'Bitte fülle sowohl a, d, e als auch die vollständige SPF aus.';
+        document.getElementById('feedback').textContent = 'Bitte fülle alle Felder aus: Scheitelpunkt (d, e), Streckfaktor a und die vollständige SPF.';
         return false;
       }
 
